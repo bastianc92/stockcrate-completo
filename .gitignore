@@ -1,0 +1,27 @@
+# Archivos temporales
+*.tmp
+*.log
+
+# Backups de base de datos
+*.sql.bak
+*.sql~
+
+# Entornos virtuales de Python
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Variables de entorno
+.env
+
+# Configuracion del editor
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Entorno virtual de Python (con punto)
+.venv/

@@ -1,66 +1,183 @@
 # StockCrate
 
-Sistema web de gestión de inventario desarrollado como proyecto de grado del programa Tecnología en Desarrollo de Software del ITM (Medellín).
+**Sistema web para la gestión de inventarios de una microempresa comercial.**
 
-## Descripción
+StockCrate es una aplicación web desarrollada como proyecto académico del programa Tecnología en Desarrollo de Software del ITM, en Medellín, Colombia.
 
-StockCrate permite registrar productos, gestionar entradas y salidas de inventario, administrar categorías, proveedores y clientes, con alertas automáticas de stock mínimo. El sistema cuenta con dos roles de usuario: administrador y empleado.
+Su propósito es facilitar el control y la administración de inventarios mediante una plataforma que permite gestionar productos, registrar movimientos de mercancía, consultar información y generar reportes para apoyar las actividades administrativas.
 
-## Tecnologías
+## Descripción general
 
-- **Base de datos:** MariaDB (incluido en XAMPP)
-- **Backend:** Python + Flask + PyMySQL (implementación inicial; pendiente de pruebas locales)
-- **Frontend:** HTML5, CSS3, JavaScript
+El sistema permite administrar las operaciones principales de un inventario desde una interfaz web. Cuenta con dos roles de usuario:
+
+- **Administrador (ADMIN):** tiene acceso a las funciones administrativas y a los reportes de gestión.
+- **Empleado (EMPLEADO):** puede realizar las operaciones habilitadas para su rol, de acuerdo con los permisos establecidos en el sistema.
+
+Entre sus principales funcionalidades se encuentran:
+
+- Gestión de productos y catálogos.
+- Administración de categorías, proveedores y clientes.
+- Registro de compras y entradas de mercancía.
+- Registro de ventas y salidas de inventario.
+- Ajustes de existencias.
+- Consulta del historial de movimientos.
+- Alertas de productos con existencias bajas.
+- Reportes e indicadores para apoyar la gestión del inventario.
+
+## Tecnologías utilizadas
+
+| Componente                     | Tecnología                       |
+| ------------------------------ | -------------------------------- |
+| Frontend                       | HTML5, CSS3 y JavaScript         |
+| Backend                        | Python y Flask                   |
+| API                            | Flask REST                       |
+| Base de datos                  | MariaDB                          |
+| Conexión a la base de datos    | PyMySQL                          |
+| Entorno local de base de datos | XAMPP                            |
+| Autenticación                  | Tokens Bearer y control de roles |
 
 ## Estructura del proyecto
 
-frontend/ Interfaz de usuario (HTML, CSS, JS)
-backend/ API REST (Flask), organizada en modulos (ver backend/README.md)
-database/ Un solo script (stockcrate.sql): esquema, datos de prueba y demo, y vistas para la gerencia
-docs/ Documentacion y diagramas
+```text
+StockCrate/
+│
+├── backend/
+│   ├── routes/
+│   │   ├── catalogos.py
+│   │   ├── movimientos.py
+│   │   ├── productos.py
+│   │   └── reportes.py
+│   ├── app.py
+│   ├── auth.py
+│   ├── config.py
+│   ├── db.py
+│   ├── helpers.py
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── README.md
+│
+├── database/
+│   └── stockcrate.sql
+│
+├── frontend/
+│   ├── css/
+│   │   └── estilos.css
+│   ├── js/
+│   │   └── main.js
+│   ├── index.html
+│   └── login.html
+│
+├── .gitignore
+└── README.md
+```
 
-## Estado del proyecto
+## Base de datos
 
-- [x] Diseño de base de datos (15 tablas, restricciones y FKs)
-- [x] Diagramas UML y ER
-- [x] Interfaz de usuario (HTML/CSS/JS)
-- [x] Backend API implementada y organizada en modulos (probada con 60 casos automaticos)
-- [x] Consultas de valor para la gerencia (vistas SQL + rutas /api/reportes)
-- [x] Frontend: seccion Reportes y indicadores de gerencia en el inicio (solo administrador)
-- [x] Conexión frontend configurada para usar el backend
-- [ ] Pruebas funcionales completas en XAMPP
-- [ ] Revisión de seguridad y despliegue
+El proyecto utiliza MariaDB y cuenta con una base de datos denominada `stockcrate`, organizada en 15 tablas relacionadas con la gestión del inventario y sus operaciones.
 
-## Rutas que espera el frontend
+El archivo `database/stockcrate.sql` contiene el script para crear e inicializar la estructura de la base de datos y sus datos de demostración.
 
-Todas cuelgan de `http://localhost:5000/api` (se cambia en `API_URL`). Si el login devuelve un `token`, se envía como `Authorization: Bearer <token>`. Los campos siguen el esquema de `stockcrate_db_v2.sql`.
+La base de datos debe importarse previamente en MariaDB antes de ejecutar la aplicación.
 
-| Método | Ruta | Qué recibe o devuelve |
-|--------|------|-----------------------|
-| POST | /auth/login | Devuelve `{ token, correo, nombre, rol }`. El rol es `ADMIN` o `EMPLEADO`. Se activa con `USAR_BACKEND` en login.html |
-| GET, POST | /productos | Campos: codigo, nombre, id_categoria, precio_compra, precio_venta, stock, stock_minimo, descripcion. El GET agrega `categoria_nombre` |
-| PUT, DELETE | /productos/{id} | Editar y desactivar (poner `activo = 0`) |
-| GET, POST, PUT | /categorias | nombre, descripcion, activo |
-| GET, POST, PUT | /proveedores | nombre, nit, telefono, correo, direccion |
-| GET, POST, PUT | /clientes | id_cliente (= documento, texto), nombre_razon_social, apellido_paterno, apellido_materno, documento, telefono, correo, direccion |
-| POST | /compras | `{ id_proveedor, observacion, detalles: [{ id_producto, cantidad, precio_unitario }] }` |
-| POST | /ventas | `{ id_cliente?, observacion, detalles: [{ id_producto, cantidad, precio_unitario }] }` |
-| POST | /ajustes | `{ id_motivo, observacion, detalles: [{ id_producto, cantidad }] }` (cantidad negativa baja el stock) |
-| GET | /motivos-ajuste | Lista de `{ id_motivo, nombre }` |
-| PATCH | /compras/{id}/anular, /ventas/{id}/anular | Pone el estado en ANULADA y devuelve el stock |
-| GET | /historial | Una fila por detalle: `{ id, tipo (compra, venta o ajuste), producto, cantidad, detalle, estado, fecha, usuario }` |
+## Funcionamiento del backend
 
-Notas para el backend:
-- El número de compra y de ajuste (`COMP-0001`, `AJU-0001`), el usuario (sale del token) y el estado (COMPLETADA) los pone el backend. IVA, retención y descuento quedan en 0.
-- La base de datos no tiene triggers: el backend debe actualizar `productos.stock` al registrar o anular compras, ventas y ajustes, dentro de una transacción. El `CHECK (stock >= 0)` rechaza ventas sin stock suficiente.
-- Hace falta `flask-cors` y validar el rol en cada ruta (el front solo esconde botones: el empleado no ve editar, desactivar, anular ni ajustes).
-- Antes de entregar hay que borrar `USUARIOS_PRUEBA` de login.html.
+El backend está desarrollado con Python y Flask. Se encarga de procesar las solicitudes del frontend, consultar y modificar la información almacenada en MariaDB y aplicar las reglas de negocio correspondientes.
+
+La API utiliza la dirección local:
+
+```text
+http://localhost:5000/api
+```
+
+La autenticación se realiza mediante tokens Bearer. Después de iniciar sesión, el token se utiliza en las solicitudes que requieren autenticación.
+
+El sistema también valida los permisos de acuerdo con el rol del usuario, tanto en la interfaz como en las rutas protegidas del backend.
+
+Para conocer los pasos de instalación, configuración y ejecución, consulta el archivo `backend/README.md`.
+
+## Módulos y funcionalidades
+
+| Módulo        | Funcionalidad                                                            |
+| ------------- | ------------------------------------------------------------------------ |
+| Autenticación | Inicio de sesión y control de acceso por roles.                          |
+| Productos     | Consulta, creación, edición y desactivación de productos.                |
+| Catálogos     | Administración de categorías, proveedores, clientes y motivos de ajuste. |
+| Compras       | Registro de entradas de mercancía y actualización de existencias.        |
+| Ventas        | Registro de salidas de mercancía y control de existencias.               |
+| Ajustes       | Corrección de existencias mediante movimientos de ajuste.                |
+| Historial     | Consulta de los movimientos registrados.                                 |
+| Reportes      | Indicadores y consultas para apoyar la gestión administrativa.           |
+
+Las existencias se actualizan mediante las operaciones de compras, ventas y ajustes, manteniendo la relación entre los movimientos y el inventario.
+
+## Reportes
+
+El módulo de reportes está orientado a proporcionar información útil para la toma de decisiones administrativas.
+
+Incluye consultas relacionadas con:
+
+- Resumen general del inventario.
+- Productos con stock crítico.
+- Valor del inventario.
+- Rentabilidad.
+- Clasificación ABC.
+- Resumen mensual.
+- Productos sin rotación.
+- Cobertura de stock.
+- Compras por proveedor.
+- Comparativo de proveedores.
+- Pérdidas por ajustes.
+- Mejores clientes.
+- Ventas por usuario.
+
+El acceso a este módulo está restringido al rol administrador.
+
+## Pruebas realizadas
+
+Durante el desarrollo se realizaron pruebas funcionales en un entorno local con XAMPP y MariaDB.
+
+Se verificaron, entre otros aspectos:
+
+- Inicio de sesión con los roles administrador y empleado.
+- Consulta, creación, modificación y eliminación de productos.
+- Registro de compras y actualización de existencias.
+- Registro de ventas y actualización de existencias.
+- Registro de ajustes de inventario.
+- Consulta del historial de movimientos.
+- Acceso a los reportes según los permisos del usuario.
+- Validación de restricciones de acceso para el rol empleado.
+
+Estas verificaciones permitieron comprobar el funcionamiento de los principales módulos de la aplicación en el entorno local de desarrollo.
+
+## Instalación y ejecución
+
+Para ejecutar StockCrate localmente se requiere:
+
+- Windows o un sistema operativo compatible.
+- Python.
+- XAMPP con MariaDB.
+- Un navegador web.
+
+Los pasos generales son:
+
+1. Descargar o clonar el repositorio.
+2. Iniciar el servicio de MariaDB desde XAMPP.
+3. Crear e importar la base de datos utilizando `database/stockcrate.sql`.
+4. Configurar las variables de conexión del backend a partir de `backend/.env.example`.
+5. Instalar las dependencias de Python indicadas en `backend/requirements.txt`.
+6. Iniciar el backend.
+7. Abrir la interfaz web desde el navegador.
+
+Los comandos y las instrucciones detalladas de configuración se encuentran en `backend/README.md`.
+
+## Consideraciones técnicas
+
+- La aplicación está preparada para ejecutarse en un entorno local de desarrollo.
+- El backend utiliza PyMySQL para conectarse con MariaDB.
+- La base de datos no se crea automáticamente al iniciar el backend; debe importarse previamente.
+- Los tokens de sesión se almacenan en memoria y se pierden cuando se reinicia el backend.
+- Para un despliegue en producción sería necesario fortalecer la configuración de seguridad, la gestión de sesiones y los parámetros del servidor.
 
 ## Autor
 
 **Sebastián Castañeda Diosa**
-Tecnología en Desarrollo de Software - ITM Medellín
-
-
-## Backend local
-Consulta `backend/README.md` para instalar dependencias, configurar la conexión y ejecutar la API. La API usa la base `stockcrate` y no crea ni elimina tablas automáticamente. Antes de probar, inicia MySQL/MariaDB en XAMPP. Si importas los .sql por consola, usa `--default-character-set=utf8mb4` para que las tildes queden bien (en phpMyAdmin se importan bien con UTF-8). Esta versión inicial requiere pruebas locales y ajustes según los errores que aparezcan.
